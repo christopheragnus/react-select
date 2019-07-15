@@ -9,6 +9,7 @@
     "react-highlight-words": "^0.16.0",
     "react-scripts": "3.0.1",
     "react-select": "^3.0.4",
+    "react-test-renderer": "^16.8.6",
     "styled-components": "^4.3.2"
   },
   "scripts": {
@@ -31,5 +32,6 @@
       "last 1 firefox version",
       "last 1 safari version"
     ]
-  }
+  },
+  "devDependencies": {}
 }

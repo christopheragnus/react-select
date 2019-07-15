@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Select, { components } from "react-select";
 import AsyncSelect from "react-select/async";
 import axios from "axios";
@@ -9,23 +9,10 @@ import "./autocomplete.css";
 const API_URL = "http://www.omdbapi.com";
 const API_KEY = process.env.REACT_APP_API_KEY;
 
-const CustomDropdown = styled.div`
-  display: flex;
-  flex-direction: column;
-`;
-
-const Title = styled.div`
-  font-size: 1rem;
-`;
-
-const Subtitle = styled.div`
-  font-size: 0.8rem;
-  color: grey;
-`;
-
 const customStyles = {
   control: styles => ({ ...styles, borderRadius: "40px" }),
   container: styles => ({ ...styles, width: "90%" }),
+  valueContainer: styles => ({ ...styles, padding: "2px" }),
   option: (styles, state) => ({
     ...styles
   }),
@@ -37,7 +24,10 @@ const customStyles = {
 };
 
 function Autocomplete() {
-  const [inputValue, setInputValue] = useState(null);
+  const [selectedOption, setSelectedOption] = useState("");
+  let inputValue;
+
+  useEffect(() => {});
 
   function noOptionsMessage(inputMessage) {
     if (!inputMessage) {
@@ -45,39 +35,32 @@ function Autocomplete() {
     }
   }
 
-  const searchOptions = value => {
-    return axios
-      .get(API_URL, {
+  const searchOptions = async value => {
+    try {
+      const res = await axios.get(API_URL, {
         params: {
           apikey: API_KEY,
           s: value
         }
-      })
-      .then(res => {
-        //console.log(res.data.Search);
-
-        if (res.data.Response === "True") {
-          const searchData = res.data.Search;
-          return searchData.map(item => {
-            let tempArr = {};
-            tempArr["value"] = item.imdbID;
-            tempArr["label"] = item.Title;
-            tempArr["year"] = item.Year;
-
-            return tempArr;
-          });
-        }
-      })
-      .catch(err => {
-        console.log(err);
-        noOptionsMessage(err);
       });
+      if (res.data.Response === "True") {
+        const searchData = res.data.Search;
+        return searchData.map(item => {
+          let tempArr = {};
+          tempArr["value"] = item.imdbID;
+          tempArr["label"] = item.Title;
+          tempArr["year"] = item.Year;
+          return tempArr;
+        });
+      }
+    } catch (err) {
+      console.log(err);
+      noOptionsMessage(err);
+    }
   };
 
-  const customOption = props => {
+  const customOption = (props, state) => {
     const { label, year } = props.data;
-    console.log("inside props", props);
-
     return (
       <CustomDropdown>
         <components.Option {...props}>
@@ -94,19 +77,53 @@ function Autocomplete() {
     );
   };
 
+  const handleChange = selectedOption => {
+    setSelectedOption(selectedOption);
+    console.log(`Option selected:`, selectedOption);
+  };
+
+  const onInputChange = value => {
+    inputValue = value;
+  };
+
+  const isDisabled = () => {
+    if (selectedOption.length >= 5) {
+      return true;
+    }
+
+    return false;
+  };
+
   return (
     <AsyncSelect
       cacheOptions
       defaultOptions
       isMulti
-      className="basic-multi-select"
-      classNamePrefix="select"
+      isSearchable
       loadOptions={searchOptions}
       styles={customStyles}
       components={{ Option: customOption }}
       noOptionsMessage={() => noOptionsMessage()}
+      onInputChange={onInputChange}
+      onChange={handleChange}
+      value={selectedOption}
+      isDisabled={selectedOption.length >= 5 ? true : false}
     />
   );
 }
+
+const CustomDropdown = styled.div`
+  display: flex;
+  flex-direction: column;
+`;
+
+const Title = styled.div`
+  font-size: 1rem;
+`;
+
+const Subtitle = styled.div`
+  font-size: 0.8rem;
+  color: grey;
+`;
 
 export default Autocomplete;
