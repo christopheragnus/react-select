@@ -24,7 +24,8 @@ const customStyles = {
 };
 
 function Autocomplete() {
-  const [selectedOption, setSelectedOption] = useState("");
+  const [selectedOption, setSelectedOption] = useState([]);
+  const [message, setMessage] = useState(null);
   let inputValue;
 
   useEffect(() => {});
@@ -37,6 +38,7 @@ function Autocomplete() {
 
   const searchOptions = async value => {
     try {
+      setMessage(null);
       const res = await axios.get(API_URL, {
         params: {
           apikey: API_KEY,
@@ -54,8 +56,8 @@ function Autocomplete() {
         });
       }
     } catch (err) {
-      console.log(err);
-      noOptionsMessage(err);
+      //console.log(err);
+      setMessage(err);
     }
   };
 
@@ -79,38 +81,50 @@ function Autocomplete() {
 
   const handleChange = selectedOption => {
     setSelectedOption(selectedOption);
-    console.log(`Option selected:`, selectedOption);
+    //console.log(`Option selected:`, selectedOption);
   };
 
   const onInputChange = value => {
     inputValue = value;
   };
 
-  const isDisabled = () => {
-    if (selectedOption.length >= 5) {
-      return true;
-    }
-
-    return false;
-  };
-
   return (
-    <AsyncSelect
-      cacheOptions
-      defaultOptions
-      isMulti
-      isSearchable
-      loadOptions={searchOptions}
-      styles={customStyles}
-      components={{ Option: customOption }}
-      noOptionsMessage={() => noOptionsMessage()}
-      onInputChange={onInputChange}
-      onChange={handleChange}
-      value={selectedOption}
-      isDisabled={selectedOption.length >= 5 ? true : false}
-    />
+    <>
+      {message ? <ErrorPost>{String(message)}</ErrorPost> : null}
+      <AsyncSelect
+        cacheOptions
+        defaultOptions
+        isMulti
+        isSearchable
+        loadOptions={searchOptions}
+        styles={customStyles}
+        components={{ Option: customOption }}
+        noOptionsMessage={() => noOptionsMessage()}
+        onInputChange={onInputChange}
+        onChange={handleChange}
+        isOptionDisabled={
+          selectedOption
+            ? option => (selectedOption.length >= 5 ? true : false)
+            : false
+        }
+      />
+    </>
   );
 }
+
+const ErrorPost = styled.div`
+  margin: 5px;
+  background-color: #fff1f0;
+  border: 1px solid #ffa39e;
+  box-sizing: border-box;
+  margin: 0;
+  color: rgba(0, 0, 0, 0.65);
+  font-size: 14px;
+  line-height: 1.5;
+  position: relative;
+  padding: 8px 15px 8px 15px;
+  border-radius: 4px;
+`;
 
 const CustomDropdown = styled.div`
   display: flex;
